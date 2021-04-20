@@ -5,30 +5,18 @@ import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.streaming.api.windowing.time.Time;
 
 import java.io.Serializable;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
 
 public class ControlMessage implements Serializable {
     public static final String controlLabel = "Control";
-
-    public static final String edgeFilterStateName = "edgeFilter";
-    public static final String vertexFilterStateName = "vertexFilter";
-    public static final String withGroupStateName = "vertexFilter";
-    public static final String slideSizeStateName = "slideSize";
-
-    public static final String defaultWindowSize = "30.seconds";
-    public static final String defaultSlideSize = "10.seconds";
-
-
-    private static final long serialVersionUID = 1L;
-    private Boolean withGrouping = false;
-    private String windowSize;
-    private String slideSize;
-    private String vertexLabel;
-    private String edgeLabel;
-    private Long timestamp;
+    public Boolean withGrouping = false;
+    public String windowSize;
+    public String slideSize;
+    public String vertexLabel;
+    public String edgeLabel;
+    public Long timestamp;
 
     public ControlMessage() {
         withGrouping = false;
@@ -46,27 +34,11 @@ public class ControlMessage implements Serializable {
         return JSON.parseObject(controlSignal, ControlMessage.class);
     }
 
-    public static Time timeOf(String commaSplitTimeStr) {
-        String[] timeArray = commaSplitTimeStr.split("\\.");
-        long size = Long.parseLong(timeArray[0]);
-        String unit = timeArray[1].toUpperCase(); // eg: "MINUTES" or "SECONDS"
-
-        return Time.of(size, TimeUnit.valueOf(unit));
-    }
-
-    public static Time getDefaultWindowSize() {
-        return ControlMessage.timeOf(ControlMessage.defaultWindowSize);
-    }
-
-    public static Time getDefaultSlideSize() {
-        return ControlMessage.timeOf(ControlMessage.defaultSlideSize);
-    }
-
-    public static ControlMessage buildDefault() {
+    public static ControlMessage buildDefault(String windowSize, String slideSize) {
         ControlMessage controlMessage = new ControlMessage();
         controlMessage.setWithGrouping(false);
-        controlMessage.setWindowSize(defaultWindowSize);
-        controlMessage.setSlideSize(defaultSlideSize);
+        controlMessage.setWindowSize(windowSize);
+        controlMessage.setSlideSize(slideSize);
         controlMessage.setVertexLabel(null);
         controlMessage.setEdgeLabel(null);
         return controlMessage;
@@ -80,11 +52,24 @@ public class ControlMessage implements Serializable {
         this.withGrouping = controlMessage.withGrouping;
     }
 
-    public Boolean getWithGrouping() {
+    public Boolean needLoop(String windowSize, String slideSize) {
+        if (!windowSize.equals(this.windowSize))
+            return true;
+        if (!slideSize.equals(this.slideSize))
+            return true;
+
+        return (!Objects.isNull(this.edgeLabel) ||
+                !Objects.isNull(this.vertexLabel) ||
+                this.withGrouping
+        );
+
+    }
+
+    public Boolean isWithGrouping() {
         return withGrouping;
     }
 
-    public void setWithGrouping(Boolean withGrouping) {
+    public void setWithGrouping(boolean withGrouping) {
         this.withGrouping = withGrouping;
     }
 
@@ -140,9 +125,5 @@ public class ControlMessage implements Serializable {
                         "\"timestamp\":\"%d\"" +
                         "}",
                 controlLabel, windowSize, slideSize, vertexLabel, edgeLabel, withGrouping, timestamp);
-    }
-
-    public String getId() {
-        return String.format("%s-%s-%s-%s-%s", windowSize, slideSize, vertexLabel, edgeLabel, withGrouping);
     }
 }
