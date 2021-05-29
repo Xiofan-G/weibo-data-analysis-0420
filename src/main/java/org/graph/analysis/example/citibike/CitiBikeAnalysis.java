@@ -4,10 +4,10 @@ import org.graph.analysis.GraphStream;
 import org.graph.analysis.GraphStreamSource;
 import org.graph.analysis.example.citibike.operator.CitiBikeDataToEdge;
 import org.graph.analysis.network.Server;
-import org.graph.analysis.operator.GroupingApply;
+import org.graph.analysis.operator.Grouping;
 import org.graph.analysis.operator.MyDataSink;
 import org.graph.analysis.operator.StreamToGraph;
-import org.graph.analysis.operator.SubGraphApply;
+import org.graph.analysis.operator.SubGraph;
 
 public class CitiBikeAnalysis {
     public static void main(String[] args) throws Exception {
@@ -18,9 +18,9 @@ public class CitiBikeAnalysis {
         GraphStreamSource graphStreamSource = new GraphStreamSource();
         GraphStream citibankGraph = graphStreamSource.fromKafka(groupId, topic, mapFunc);
         citibankGraph
-                .apply(new SubGraphApply(citibankGraph.getVertexFilter(), citibankGraph.getVertexFilter()))
-                .apply(new GroupingApply(citibankGraph.isGrouping()))
-                .addSink(new MyDataSink(citibankGraph));
+                .apply(new SubGraph())
+                .apply(new Grouping())
+                .apply(new MyDataSink());
 
         graphStreamSource.getEnvironment().execute("Citibank Data Streaming To Graph");
     }

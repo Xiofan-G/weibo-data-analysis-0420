@@ -3,10 +3,10 @@ package org.graph.analysis.example.weibo.operator;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import org.apache.flink.util.Collector;
-import org.graph.analysis.example.weibo.entity.*;
 import org.graph.analysis.entity.Edge;
-import org.graph.analysis.operator.StreamToGraph;
 import org.graph.analysis.entity.Vertex;
+import org.graph.analysis.example.weibo.entity.*;
+import org.graph.analysis.operator.StreamToGraph;
 
 import java.util.HashMap;
 
@@ -78,8 +78,9 @@ public class WeiboDataToEdge implements StreamToGraph<String> {
 
     @Override
     public void flatMap(String value, Collector<Edge<Vertex, Vertex>> out) throws Exception {
+        System.out.println("Data: " + value);
         Edge<String, String> edge = JSON.parseObject(value, new TypeReference<Edge<String, String>>(Edge.class) {
         });
-        out.collect(from(edge));
+        out.collect(this.from(edge));
     }
 }

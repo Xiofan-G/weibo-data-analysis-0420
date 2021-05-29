@@ -3,9 +3,6 @@ package org.graph.analysis.entity;
 import org.graph.analysis.example.weibo.entity.RelationLabel;
 import org.graph.analysis.example.weibo.entity.Style;
 import org.graph.analysis.example.weibo.entity.VertexLabel;
-import org.graph.analysis.entity.ControlMessage;
-import org.graph.analysis.entity.Edge;
-import org.graph.analysis.entity.Vertex;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -102,7 +99,7 @@ public class GraphContainer implements Serializable {
                 controlMessage.getWindowSize(),
                 controlMessage.getVertexLabel(),
                 controlMessage.getEdgeLabel(),
-                controlMessage.isWithGrouping() ? "Grouping" : "NoGrouping"
+                controlMessage.getWithGrouping() ? "Grouping" : "NoGrouping"
         );
     }
 

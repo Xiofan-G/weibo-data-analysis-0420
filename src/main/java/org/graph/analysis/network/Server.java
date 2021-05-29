@@ -50,6 +50,11 @@ public class Server {
     }
 
 
+    /**
+     * Send Data to frontend by websocket, by broadcast
+     *
+     * @param message message sent
+     */
     public static void sendToAll(String message) {
         System.out.println(String.format("result sunk by websocket: %s", message));
         for (WebSocketChannel session : channels) {

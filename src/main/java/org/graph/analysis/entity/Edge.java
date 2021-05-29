@@ -1,6 +1,9 @@
 package org.graph.analysis.entity;
 
+import com.alibaba.fastjson.JSON;
+
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.HashMap;
 
 public class Edge<S, T> implements Serializable {
@@ -13,9 +16,12 @@ public class Edge<S, T> implements Serializable {
     public String remark;
     public Long timestamp;
     public Integer count;
-    public HashMap<String, String> properties;
+    public String properties;
+    //本身generator是不带control message的，这是从broadcast里面获取到的
+    public ControlMessage controlMessage;
 
     public Edge() {
+        controlMessage = new ControlMessage();
     }
 
     public Edge(S source, T target, String label, String id, Long timestamp, HashMap<String, String> properties) {
@@ -25,9 +31,38 @@ public class Edge<S, T> implements Serializable {
         this.target = target;
         this.timestamp = timestamp;
         this.count = 1;
-        this.properties = properties;
+        if (properties.size() > 0) {
+            this.properties = JSON.toJSONString(properties);
+        } else {
+            this.properties = "{}";
+        }
+        controlMessage = new ControlMessage();
     }
 
+    public static Edge<Vertex, Vertex> of(Object sourceLabel, Object targetLabel, Object edgeLabel, Object count) {
+        //静态对象进行封装
+        Vertex source = Edge.addVertex(sourceLabel, sourceLabel, (int) count);
+        Vertex target = Edge.addVertex(targetLabel, targetLabel, (int) count);
+        return new Edge<>(source, target, edgeLabel.toString(), edgeLabel.toString(), new Timestamp(System.currentTimeMillis()).getTime(), new HashMap<>());
+    }
+
+    public static Vertex addVertex(Object id, Object type, int count) {
+        Vertex vertex = new Vertex(id.toString(), type.toString());
+        vertex.addCount(count);
+        return vertex;
+    }
+
+    public Integer getCount() {
+        return count;
+    }
+
+    public ControlMessage getControlMessage() {
+        return this.controlMessage;
+    }
+
+    public void setControlMessage(ControlMessage controlMessage) {
+        this.controlMessage = controlMessage;
+    }
 
     @Override
     public String toString() {
@@ -41,14 +76,6 @@ public class Edge<S, T> implements Serializable {
             target = this.target.toString();
         }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("\"properties\":{");
-        for (String key : properties.keySet()) {
-            sb.append(String.format("\"%s\":\"%s\",", key, properties.get(key)));
-        }
-        sb.delete(sb.length() - 1, sb.length());
-        sb.append("}");
-
         return String.format("{" +
                         "\"id\":\"%s\"," +
                         "\"label\":\"%s\"," +
@@ -56,9 +83,9 @@ public class Edge<S, T> implements Serializable {
                         "\"source\":\"%s\"," +
                         "\"target\":\"%s\"," +
                         "\"timestamp\":%d," +
-                        "%s" +
+                        "\"properties\":%s" +
                         "}",
-                id, label, count, source, target, timestamp, sb.toString());
+                id, label, count, source, target, timestamp, properties);
     }
 
 
@@ -94,4 +121,6 @@ public class Edge<S, T> implements Serializable {
     public void addCount(int count) {
         this.count += count;
     }
+
+
 }

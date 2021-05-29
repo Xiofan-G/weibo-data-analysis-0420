@@ -42,6 +42,8 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+//第一个版本，通过重启flink重启窗口
+//grouping使用flink table进行计算
 public class WeiboDataAnalysis {
     private final transient static GraphContainer graphContainer = new GraphContainer();
     private final transient static MapStateDescriptor<String, ControlMessage> controlMessageDescriptor = new MapStateDescriptor<>(
@@ -65,7 +67,7 @@ public class WeiboDataAnalysis {
 
         Properties properties = PropertiesUtil.getProperties("weibo");
 
-        ControlMessage controlMessage = ControlMessage.buildDefault(defaultWindowSize, defaultSlideSize);
+        ControlMessage controlMessage = ControlMessage.buildDefault();
         graphContainer.setVersion(controlMessage);
 
         final MapStateDescriptor<String, ControlMessage> controlMessageDescriptor = ControlMessage.getDescriptor();
@@ -78,10 +80,12 @@ public class WeiboDataAnalysis {
         // register kafka as consumer to consume topic: weibo
         final FlinkKafkaConsumer<String> kafkaWeiboDataConsumer = new FlinkKafkaConsumer<>("weibo", new SimpleStringSchema(), properties);
         final DataStreamSource<String> kafkaWeiDataStringStreamSource = env.addSource(kafkaWeiboDataConsumer);
+//        final DataStreamSource<String> kafkaWeiDataStringStreamSource = env.socketTextStream("localhost", 10000);
 
 
         // register kafka as consumer to consume topic: control as broadcast stream
-        final BroadcastStream<ControlMessage> broadcastControlSignalStream = BroadcastStreamUtil.getControlMessageBroadcastStream(properties, controlMessageDescriptor, env);
+        final BroadcastStream<ControlMessage> broadcastControlSignalStream = BroadcastStreamUtil.fromKafka(properties, controlMessageDescriptor, env);
+//        final BroadcastStream<ControlMessage> broadcastControlSignalStream = BroadcastStreamUtil.fromSocket(controlMessageDescriptor, env);
 
         while (loop) {
             try {
@@ -100,7 +104,7 @@ public class WeiboDataAnalysis {
 
                 kafkaWeiboDataStreamDataSet.print();
 
-                if (controlMessage.isWithGrouping()) {
+                if (controlMessage.getWithGrouping()) {
                     processWithGrouping(kafkaWeiboDataStreamDataSet, tableEnv, broadcastControlSignalStream, controlMessage);
                 } else {
                     processWithoutGrouping(kafkaWeiboDataStreamDataSet, broadcastControlSignalStream, controlMessage);
@@ -130,7 +134,7 @@ public class WeiboDataAnalysis {
                     }
 
 
-                    controlMessage.setWithGrouping(newControlMessage.isWithGrouping());
+                    controlMessage.setWithGrouping(newControlMessage.getWithGrouping());
                     controlMessage.setVertexLabel(newControlMessage.getVertexLabel());
                     controlMessage.setEdgeLabel(newControlMessage.getEdgeLabel());
 
@@ -254,6 +258,8 @@ public class WeiboDataAnalysis {
                         return new TupleEdge(value);
                     }
                 });
+        //先算边标签的数量再算顶点标签的数量
+        //进行合并再tostring sink到websocket里面
         Table table = tableEnv.fromDataStream(tupleEdgeDataStream, "f0, f1, f2, f3, f4, f5, f6.rowtime");
 
 
@@ -271,10 +277,10 @@ public class WeiboDataAnalysis {
         Table vertexTable = sourceTable.unionAll(targetTable);
         DataStream<Row> result = tableEnv.toAppendStream(vertexTable, Types.ROW(Types.STRING(), Types.STRING(), Types.STRING(), Types.SQL_TIMESTAMP()));
         Table groupedVertexTable = tableEnv.fromDataStream(result, "f0, f1, f2, f3.rowtime")
-                .window(Slide.over(windowSize).
-                        every(slideSize).
-                        on("f3").
-                        as("statWindow"))
+                .window(Slide.over(windowSize)
+                        .every(slideSize)
+                        .on("f3")
+                        .as("statWindow"))
                 .groupBy("statWindow, f2")
                 .select("f2 as vertexLabel , f0.count as vertexCount");
 
@@ -386,12 +392,13 @@ public class WeiboDataAnalysis {
             if (oldControlMessage == null) {
                 oldControlMessage = defaultControlMessage;
             }
+            getRuntimeContext();
 
             // update the state value using new state value from broadcast stream
             controlMessageBroadcastState.put("control", value);
             // only the window size、slide size changed or grouping changed
             // we need restart job
-            if (!value.isWithGrouping().equals(oldControlMessage.isWithGrouping())) {
+            if (!value.getWithGrouping().equals(oldControlMessage.getWithGrouping())) {
                 throw new ControlMessageTriggeredException(value.toString());
             }
             if (!value.getSlideSize().equals(oldControlMessage.getSlideSize())
