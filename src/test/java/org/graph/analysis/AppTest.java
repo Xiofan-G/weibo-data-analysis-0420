@@ -28,26 +28,20 @@ public class AppTest extends AbstractTestBase {
 
     @Test
     public void testGroupOperator() throws Exception {
-        //abstracttestbase可以帮助创建一个mini的flink的运行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DataStream<String> stringDataStream = env.fromElements("{\"id\":\"926-65-2447\",\"label\":\"Author\",\"remark\":\"Weibo\",\"source\":{\"id\":\"016-47-5173\",\"label\":\"User\",\"name\":\"Dr. Genie Ebert\", \"city\":\"East Roycemouth\", \"age\":28, \"gender\":\"male\"}, \"target\":{\"id\":\"600-41-0682\",\"label\":\"Weibo\",\"name\":\"No, homo habilis was erect. Australopithecus was never fully erect.\",\"agent\":\"Android 7.0\"}, \"timestamp\":\"1621851652216\"}").setParallelism(1);
-        //调用weibodatatoedge转换算子，为了适应不同的数据源做的一个接口，都可以转换成我们需要的graphstream
         WeiboDataToEdge weiboDataToEdge = new WeiboDataToEdge();
         DataStream<Edge<Vertex, Vertex>> edgeDataStream = stringDataStream.flatMap(weiboDataToEdge).flatMap(new FlatMapFunction<Edge<Vertex, Vertex>, Edge<Vertex, Vertex>>() {
             @Override
             public void flatMap(Edge<Vertex, Vertex> value, Collector<Edge<Vertex, Vertex>> out) throws Exception {
                 ControlMessage controlMessage = ControlMessage.buildDefault();
-                //模拟合并广播流的过程
                 controlMessage.setWithGrouping(true);
                 value.setControlMessage(controlMessage);
                 out.collect(value);
             }
         });
-        //将datastream 转换成graphstream
         GraphStream graphStream = new GraphStream(env, edgeDataStream.getTransformation());
         Grouping groupingApply = new Grouping();
-        //调用grouping测试
-        //addsink下沉后拿到value拼凑字符串，通过equals比较，如果相等则就是测试成功
         groupingApply.run(graphStream).addSink(new SinkFunction<Edge<Vertex, Vertex>>() {
             @Override
             public void invoke(Edge<Vertex, Vertex> value, Context context) throws Exception {

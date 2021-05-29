@@ -40,7 +40,6 @@ public class GraphStreamSource implements Serializable {
         environment.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
         // register kafka as consumer to consume topic
-        //【1】
         DataStream<String> stringDataStream = environment.addSource(new FlinkKafkaConsumer<>(topic, new SimpleStringSchema(), properties));
         DataStream<Edge<Vertex, Vertex>> dataStream = getEdgeStreamFromString(stringStreamToGraph, stringDataStream);
 
@@ -83,7 +82,6 @@ public class GraphStreamSource implements Serializable {
     private GraphStream getGraphStreamByConnectingBroadcast(DataStream<Edge<Vertex, Vertex>> dataStream) {
         DataStream<Edge<Vertex, Vertex>> edgeDataStream = dataStream
                 .connect(controlSignalStream)
-                //广播流的生命周期其实已经结束了
                 .process(new BroadcastProcessFunction<Edge<Vertex, Vertex>, ControlMessage, Edge<Vertex, Vertex>>() {
                     @Override
                     public void processElement(Edge<Vertex, Vertex> value, ReadOnlyContext ctx, Collector<Edge<Vertex, Vertex>> out) throws Exception {
@@ -112,23 +110,16 @@ public class GraphStreamSource implements Serializable {
 
                     }
                 })
-                //数据是基于event time的。一般的开窗：在合流之前设置了一个水印的提取器，把数据打上一个水印标识，然后再进行开窗，最后再进行广播流的合并。
-                //（概念类似数据上的水印时间和窗口区间进行对比，如果超过了这个时间则进入下一个窗口）
-                //先合并再进行开窗，之前的代码在【1】位置进行水印提取，但是提取无效，窗口无法触发。
-                //猜测：之前只对了一个流设置了水印提取，（可能是因为合并之后产生的新流，水印被抹掉了？也可能是两个流本身水印不一样，只对一个进行提取，无效）
-                // 但是合并之后没有水印提取的设定，所以系统不知道如何提取，导致数据一直在windows里面空转，他不会触发窗口计算。
-                //合并完了之后再进行水印的提取，数据上面打了标识
-                .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Edge<Vertex, Vertex>>() {//指派时间戳，并生成WaterMark 作用？
+                .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Edge<Vertex, Vertex>>() {//指锟斤拷时锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟絎aterMark 锟斤拷锟矫ｏ拷
 
                     @Override
                     public long extractAscendingTimestamp(Edge<Vertex, Vertex> element) {
                         return element.getTimestamp();
                     }
                 })
-                //动态窗口的大小放到了数据上面，根据数据上的标识来动态分配窗口
                 .windowAll(DynamicSlideEventTimeWindow.of(ControlMessage.getDefaultWindowSize(), ControlMessage.getDefaultSlideSize()))
                 .process(new ProcessAllWindowFunction<Edge<Vertex, Vertex>, Edge<Vertex, Vertex>, TimeWindow>() {
-                    //为了把allwindowedstream再次转换为datastream
+                    //为锟剿帮拷allwindowedstream锟劫达拷转锟斤拷为datastream
                     @Override
                     public void process(Context context, Iterable<Edge<Vertex, Vertex>> elements, Collector<Edge<Vertex, Vertex>> out) throws Exception {
                         for (Edge<Vertex, Vertex> edge : elements) {
@@ -137,7 +128,6 @@ public class GraphStreamSource implements Serializable {
 
                     }
                 });
-              //为了返回自定义的graphstream，从process中返回的stream中获得执行环境和执行结果
         return new GraphStream(edgeDataStream.getExecutionEnvironment(), edgeDataStream.getTransformation());
     }
 

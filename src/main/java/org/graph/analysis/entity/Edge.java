@@ -17,7 +17,6 @@ public class Edge<S, T> implements Serializable {
     public Long timestamp;
     public Integer count;
     public String properties;
-    //±¾ÉígeneratorÊÇ²»´øcontrol messageµÄ£¬ÕâÊÇ´ÓbroadcastÀïÃæ»ñÈ¡µ½µÄ
     public ControlMessage controlMessage;
 
     public Edge() {
@@ -40,7 +39,7 @@ public class Edge<S, T> implements Serializable {
     }
 
     public static Edge<Vertex, Vertex> of(Object sourceLabel, Object targetLabel, Object edgeLabel, Object count) {
-        //¾²Ì¬¶ÔÏó½øĞĞ·â×°
+        //ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ·ï¿½×°
         Vertex source = Edge.addVertex(sourceLabel, sourceLabel, (int) count);
         Vertex target = Edge.addVertex(targetLabel, targetLabel, (int) count);
         return new Edge<>(source, target, edgeLabel.toString(), edgeLabel.toString(), new Timestamp(System.currentTimeMillis()).getTime(), new HashMap<>());

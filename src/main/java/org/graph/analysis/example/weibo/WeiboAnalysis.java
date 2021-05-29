@@ -19,8 +19,8 @@ public class WeiboAnalysis {
         GraphStreamSource graphStreamSource = new GraphStreamSource();
         GraphStream weiboGraph = graphStreamSource.fromKafka(groupId, topic, mapFunc);
         weiboGraph
-                .apply(new SubGraph())//可以直接换成filter那么用的就是datastream的流，现在使用的就是graphstream的流
-                .apply(new Grouping())//如果不用apply可以换成.keyby().process()，apply相当于把keyby和process封装了
+                .apply(new SubGraph())
+                .apply(new Grouping())
                 .apply(new MyDataSink());
 
         graphStreamSource.getEnvironment().execute("Weibo Data Streaming To Graph");

@@ -9,7 +9,6 @@ import org.graph.analysis.entity.Vertex;
 import org.graph.analysis.operator.GraphApply;
 
 public class GraphStream extends DataStream<Edge<Vertex, Vertex>> {
-    //继承datastream为了继承filter等算子的功能
     private static final long serialVersionUID = 1L;
     public ControlMessage controlMessage;
 
@@ -19,8 +18,6 @@ public class GraphStream extends DataStream<Edge<Vertex, Vertex>> {
     }
 
     public GraphStream apply(GraphApply<GraphStream> apply) {
-        //基于graphapply接口，传入的实现这个接口的一个对象
-        //直接调用传入的这个对象里面的run方法
         return apply.run(this);
     }
 }
