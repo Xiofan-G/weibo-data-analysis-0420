@@ -12,6 +12,7 @@ import org.graph.analysis.entity.Edge;
 import org.graph.analysis.entity.Vertex;
 
 public class SubGraph extends RichFilterFunction<Edge<Vertex, Vertex>> implements GraphApply<GraphStream> {
+   //extends from RichFilterFunction, because only in this there is the ability to define state
     public transient MapState<String, String> edgeFilter;
     public transient MapState<String, String> vertexFilter;
 
@@ -27,7 +28,7 @@ public class SubGraph extends RichFilterFunction<Edge<Vertex, Vertex>> implement
                 ControlMessage.vertexFilterStateName,
                 BasicTypeInfo.STRING_TYPE_INFO,
                 BasicTypeInfo.STRING_TYPE_INFO);
-
+        //get vertexfilter and edgefilter
         vertexFilter = getRuntimeContext().getMapState(vertexFilterDescriptor);
         edgeFilter = getRuntimeContext().getMapState(edgeFilterDescriptor);
     }

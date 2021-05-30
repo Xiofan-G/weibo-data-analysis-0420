@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class DynamicSlideEventTimeWindow extends WindowAssigner<Edge<Vertex, Vertex>, TimeWindow> {
-    //~{82P4AK~}flink~{WT4x5D~}SlidingEventTimeWindows~{7=7(~}
+    //Override flink's own SlidingEventTimeWindows method
     private static final long serialVersionUID = 1L;
 
     private long size;
@@ -43,8 +43,6 @@ public class DynamicSlideEventTimeWindow extends WindowAssigner<Edge<Vertex, Ver
     @Override
     public Collection<TimeWindow> assignWindows(Edge<Vertex, Vertex> element, long timestamp, WindowAssignerContext context) {
         // update window size and slide size by data's control massage tag
-        // ~{4S~}edge~{6TOs@oCf0Q~}slide~{:M~}size~{=xPPVXPB83V5#,=xPPF+RFA?Ih6(~}
-        //~{8y>]~}size~{:M~}slide~{4sP!=xPPIh6(#,2"GR7VEdJ}>]~}
         this.updateWindowAndSlideSize(element);
         if (timestamp > Long.MIN_VALUE) {
             List<TimeWindow> windows = new ArrayList<>((int) (size / slide));
@@ -94,7 +92,6 @@ public class DynamicSlideEventTimeWindow extends WindowAssigner<Edge<Vertex, Ver
     }
 
     @Override
-    //~{0Q~}object~{8DP43IWT<:5D~}edge<vertex, vertex>
     public Trigger<Edge<Vertex, Vertex>, TimeWindow> getDefaultTrigger(StreamExecutionEnvironment env) {
         return new MyEventTimeTrigger();
     }

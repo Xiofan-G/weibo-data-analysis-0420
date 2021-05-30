@@ -58,6 +58,7 @@ public class MyDataSink implements GraphApply<GraphStream>, SinkFunction<Edge<Ve
 
     @Override
     public void invoke(Edge<Vertex, Vertex> value, Context context) throws Exception {
+       //Need grouping information, because the objects of edge are different, so you need to determine
         if (!this.updateWithGroupingState(value)) {
             Iterator<Boolean> iterator = this.withGroupingState.get().iterator();
             if (iterator.hasNext() && iterator.next()) {
@@ -76,6 +77,7 @@ public class MyDataSink implements GraphApply<GraphStream>, SinkFunction<Edge<Ve
     }
 
     protected void send(long timestamp) throws Exception {
+        //This processing reduces the pressure on the front-end rendering data
         if (lastSunkAt + slideSizeState.get().iterator().next() <= timestamp) {
             Server.sendToAll(graphContainer.toString());
             graphContainer.clear();

@@ -42,8 +42,8 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-//第一个版本，通过重启flink重启窗口
-//grouping使用flink table进行计算
+//The first version, by restarting the flink to restart window
+//grouping is calculated by using flink table
 public class WeiboDataAnalysis {
     private final transient static GraphContainer graphContainer = new GraphContainer();
     private final transient static MapStateDescriptor<String, ControlMessage> controlMessageDescriptor = new MapStateDescriptor<>(

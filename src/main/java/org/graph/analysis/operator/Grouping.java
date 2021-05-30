@@ -44,6 +44,8 @@ public class Grouping extends KeyedProcessFunction<String, Edge<Vertex, Vertex>,
         this.updateWithGroupingState(value);
 
         if (this.withGroupingState.value()) {
+            //into a simple new data object
+            //Same logic as table
             Edge<Vertex, Vertex> newEdge = Edge.of(value.getSource().getLabel(), value.getTarget().getLabel(), value.getLabel(), 1);
             newEdge.setControlMessage(value.getControlMessage());
             out.collect(newEdge);

@@ -110,6 +110,7 @@ public class GraphStreamSource implements Serializable {
 
                     }
                 })
+                //Very important. It must be set after connect or it will lead to not opening the window
                 .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Edge<Vertex, Vertex>>() {//ָ��ʱ�����������WaterMark ���ã�
 
                     @Override
@@ -118,6 +119,7 @@ public class GraphStreamSource implements Serializable {
                     }
                 })
                 .windowAll(DynamicSlideEventTimeWindow.of(ControlMessage.getDefaultWindowSize(), ControlMessage.getDefaultSlideSize()))
+                //To convert AllWindowedStream to DataStream again
                 .process(new ProcessAllWindowFunction<Edge<Vertex, Vertex>, Edge<Vertex, Vertex>, TimeWindow>() {
                     //Ϊ�˰�allwindowedstream�ٴ�ת��Ϊdatastream
                     @Override
@@ -128,6 +130,7 @@ public class GraphStreamSource implements Serializable {
 
                     }
                 });
+        //Returns a custom graphstream
         return new GraphStream(edgeDataStream.getExecutionEnvironment(), edgeDataStream.getTransformation());
     }
 

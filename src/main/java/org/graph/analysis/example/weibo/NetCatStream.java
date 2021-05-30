@@ -11,7 +11,7 @@ import org.graph.analysis.operator.SubGraph;
 
 public class NetCatStream {
     public static void main(String[] args) throws Exception {
-        //nc 调试窗口
+        //nc for test
         Server.initWebSocketServer();
 
         StreamToGraph<String> mapFunc = new WeiboDataToEdge();
