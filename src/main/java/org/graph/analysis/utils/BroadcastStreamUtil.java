@@ -12,9 +12,21 @@ import org.graph.analysis.entity.ControlMessage;
 import java.util.Properties;
 
 public class BroadcastStreamUtil {
-    public static BroadcastStream<ControlMessage> getControlMessageBroadcastStream(Properties properties, MapStateDescriptor<String, ControlMessage> controlMessageDescriptor, StreamExecutionEnvironment env) {
+    public static BroadcastStream<ControlMessage> fromKafka(Properties properties, MapStateDescriptor<String, ControlMessage> controlMessageDescriptor, StreamExecutionEnvironment env) {
         final FlinkKafkaConsumer<String> kafkaControlSignalConsumer = new FlinkKafkaConsumer<>("control", new SimpleStringSchema(), properties);
         final DataStream<String> broadcastStream = env.addSource(kafkaControlSignalConsumer).setParallelism(1);
+        return broadcastStream
+                .map(new MapFunction<String, ControlMessage>() {
+                    @Override
+                    public ControlMessage map(String value) {
+                        return ControlMessage.buildFromString(value);
+                    }
+                })
+                .broadcast(controlMessageDescriptor);
+    }
+
+    public static BroadcastStream<ControlMessage> fromSocket(MapStateDescriptor<String, ControlMessage> controlMessageDescriptor, StreamExecutionEnvironment env) {
+        final DataStream<String> broadcastStream = env.socketTextStream("localhost", 10001).setParallelism(1);
         return broadcastStream
                 .map(new MapFunction<String, ControlMessage>() {
                     @Override
