@@ -24,7 +24,7 @@ public class AppTest extends AbstractTestBase {
     /**
      * Rigorous Test :-)
      */
-//grouping operator test
+
 
     @Test
     public void testGroupOperator() throws Exception {
@@ -35,16 +35,14 @@ public class AppTest extends AbstractTestBase {
             @Override
             public void flatMap(Edge<Vertex, Vertex> value, Collector<Edge<Vertex, Vertex>> out) throws Exception {
                 ControlMessage controlMessage = ControlMessage.buildDefault();
-                //Simulate the process of combining broadcast streams
                 controlMessage.setWithGrouping(true);
                 value.setControlMessage(controlMessage);
                 out.collect(value);
             }
         });
-        //DataStream to GraphStream
         GraphStream graphStream = new GraphStream(env, edgeDataStream.getTransformation());
         Grouping groupingApply = new Grouping();
-        //addink, get the value and put together to a string, compare by equals, if equal then the test is successful
+
         groupingApply.run(graphStream).addSink(new SinkFunction<Edge<Vertex, Vertex>>() {
             @Override
             public void invoke(Edge<Vertex, Vertex> value, Context context) throws Exception {

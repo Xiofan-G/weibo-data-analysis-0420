@@ -93,9 +93,6 @@ public class GraphStreamSource implements Serializable {
                         // mixin the control message to data stream, just for transfer data to follow operator
                         if (controlMessage != null) {
                             value.setControlMessage(controlMessage);
-
-                        } else {
-                            value.setControlMessage(ControlMessage.buildDefault());
                         }
                         out.collect(value);
                     }
@@ -110,8 +107,7 @@ public class GraphStreamSource implements Serializable {
 
                     }
                 })
-                //Very important. It must be set after connect or it will lead to not opening the window
-                .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Edge<Vertex, Vertex>>() {//ָ��ʱ�����������WaterMark ���ã�
+                .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Edge<Vertex, Vertex>>() {
 
                     @Override
                     public long extractAscendingTimestamp(Edge<Vertex, Vertex> element) {
@@ -119,9 +115,7 @@ public class GraphStreamSource implements Serializable {
                     }
                 })
                 .windowAll(DynamicSlideEventTimeWindow.of(ControlMessage.getDefaultWindowSize(), ControlMessage.getDefaultSlideSize()))
-                //To convert AllWindowedStream to DataStream again
                 .process(new ProcessAllWindowFunction<Edge<Vertex, Vertex>, Edge<Vertex, Vertex>, TimeWindow>() {
-                    //Ϊ�˰�allwindowedstream�ٴ�ת��Ϊdatastream
                     @Override
                     public void process(Context context, Iterable<Edge<Vertex, Vertex>> elements, Collector<Edge<Vertex, Vertex>> out) throws Exception {
                         for (Edge<Vertex, Vertex> edge : elements) {
@@ -130,7 +124,7 @@ public class GraphStreamSource implements Serializable {
 
                     }
                 });
-        //Returns a custom graphstream
+
         return new GraphStream(edgeDataStream.getExecutionEnvironment(), edgeDataStream.getTransformation());
     }
 

@@ -21,7 +21,7 @@ public class Grouping extends KeyedProcessFunction<String, Edge<Vertex, Vertex>,
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        ValueStateDescriptor<Boolean> withGroupingStateDescriptor = new ValueStateDescriptor<>(ControlMessage.withGroupStateName, BasicTypeInfo.BOOLEAN_TYPE_INFO);
+        ValueStateDescriptor<Boolean> withGroupingStateDescriptor = new ValueStateDescriptor<>(ControlMessage.withGroupStateName, BasicTypeInfo.BOOLEAN_TYPE_INFO, Boolean.FALSE);
         withGroupingState = getRuntimeContext().getState(withGroupingStateDescriptor);
     }
 
@@ -44,8 +44,6 @@ public class Grouping extends KeyedProcessFunction<String, Edge<Vertex, Vertex>,
         this.updateWithGroupingState(value);
 
         if (this.withGroupingState.value()) {
-            //into a simple new data object
-            //Same logic as table
             Edge<Vertex, Vertex> newEdge = Edge.of(value.getSource().getLabel(), value.getTarget().getLabel(), value.getLabel(), 1);
             newEdge.setControlMessage(value.getControlMessage());
             out.collect(newEdge);
@@ -61,8 +59,13 @@ public class Grouping extends KeyedProcessFunction<String, Edge<Vertex, Vertex>,
      * @throws Exception
      */
     private void updateWithGroupingState(Edge<Vertex, Vertex> value) throws Exception {
-        this.withGroupingState.clear();
         ControlMessage controlMessage = value.getControlMessage();
+        if (controlMessage == null) {
+            return;
+        }
+        if (value.getControlMessage().getWithGrouping().equals(this.withGroupingState.value()))
+            return;
+
         this.withGroupingState.update(controlMessage.getWithGrouping());
     }
 }

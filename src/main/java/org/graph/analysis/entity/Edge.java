@@ -20,7 +20,6 @@ public class Edge<S, T> implements Serializable {
     public ControlMessage controlMessage;
 
     public Edge() {
-        controlMessage = new ControlMessage();
     }
 
     public Edge(S source, T target, String label, String id, Long timestamp, HashMap<String, String> properties) {
@@ -35,11 +34,9 @@ public class Edge<S, T> implements Serializable {
         } else {
             this.properties = "{}";
         }
-        controlMessage = new ControlMessage();
     }
 
     public static Edge<Vertex, Vertex> of(Object sourceLabel, Object targetLabel, Object edgeLabel, Object count) {
-        //��̬������з�װ
         Vertex source = Edge.addVertex(sourceLabel, sourceLabel, (int) count);
         Vertex target = Edge.addVertex(targetLabel, targetLabel, (int) count);
         return new Edge<>(source, target, edgeLabel.toString(), edgeLabel.toString(), new Timestamp(System.currentTimeMillis()).getTime(), new HashMap<>());

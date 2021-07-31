@@ -42,8 +42,6 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-//The first version, by restarting the flink to restart window
-//grouping is calculated by using flink table
 public class WeiboDataAnalysis {
     private final transient static GraphContainer graphContainer = new GraphContainer();
     private final transient static MapStateDescriptor<String, ControlMessage> controlMessageDescriptor = new MapStateDescriptor<>(
@@ -258,8 +256,6 @@ public class WeiboDataAnalysis {
                         return new TupleEdge(value);
                     }
                 });
-        //先算边标签的数量再算顶点标签的数量
-        //进行合并再tostring sink到websocket里面
         Table table = tableEnv.fromDataStream(tupleEdgeDataStream, "f0, f1, f2, f3, f4, f5, f6.rowtime");
 
 

@@ -15,7 +15,7 @@ public class ControlMessage implements Serializable {
 
     public static final String edgeFilterStateName = "edgeFilter";
     public static final String vertexFilterStateName = "vertexFilter";
-    public static final String withGroupStateName = "vertexFilter";
+    public static final String withGroupStateName = "withGroup";
     public static final String slideSizeStateName = "slideSize";
 
     public static final String defaultWindowSize = "30.seconds";

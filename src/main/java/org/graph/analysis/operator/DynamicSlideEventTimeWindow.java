@@ -16,7 +16,6 @@ import java.util.Collection;
 import java.util.List;
 
 public class DynamicSlideEventTimeWindow extends WindowAssigner<Edge<Vertex, Vertex>, TimeWindow> {
-    //Override flink's own SlidingEventTimeWindows method
     private static final long serialVersionUID = 1L;
 
     private long size;
@@ -67,8 +66,13 @@ public class DynamicSlideEventTimeWindow extends WindowAssigner<Edge<Vertex, Ver
      *
      * @param element data element-> Edge<Vertex, Vertex>
      */
+
+
     public void updateWindowAndSlideSize(Edge<Vertex, Vertex> element) {
         ControlMessage controlMessage = element.getControlMessage();
+        if (controlMessage == null) {
+            controlMessage = ControlMessage.buildDefault();
+        }
         long newSize = ControlMessage.timeOf(controlMessage.getWindowSize()).toMilliseconds();
         long newSlide = ControlMessage.timeOf(controlMessage.getSlideSize()).toMilliseconds();
 
